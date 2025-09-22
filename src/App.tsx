@@ -1,4 +1,4 @@
-import { useState, FormEvent, MouseEvent } from 'react'; // Adicionar MouseEvent
+import { useState, FormEvent, MouseEvent, useMemo } from 'react'; // Adicionar useMemo
 
 // ... (interface Book, availableGenres, availableStatus, initialBooks continuam os mesmos)
 interface Book {
@@ -61,9 +61,9 @@ const initialBooks: Book[] = [
     cover: 'https://covers.openlibrary.org/b/id/10279212-L.jpg',
     genre: 'Fantasia',
     rating: 5,
-    status: 'PAUSADO',
+    status: 'LIDO',
     totalPages: 652,
-    currentPage: 300,
+    currentPage: 652,
   },
    {
     id: '5',
@@ -80,7 +80,6 @@ export default function App() {
   const [books, setBooks] = useState<Book[]>(initialBooks);
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
-  // --- NOVO ESTADO PARA O MODAL DE DETALHES ---
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
 
   const [title, setTitle] = useState('');
@@ -93,6 +92,22 @@ export default function App() {
   const [rating, setRating] = useState(0);
   const [status, setStatus] = useState('');
   const [notes, setNotes] = useState('');
+
+  // --- LÓGICA PARA CALCULAR AS ESTATÍSTICAS DO DASHBOARD ---
+  // useMemo evita que os cálculos sejam refeitos a cada renderização, otimizando a performance.
+  const stats = useMemo(() => {
+    const booksBeingRead = books.filter(book => book.status === 'LENDO').length;
+    const booksFinished = books.filter(book => book.status === 'LIDO').length;
+    
+    const totalPagesRead = books.reduce((acc, book) => {
+      if (book.status === 'LIDO') {
+        return acc + (book.totalPages || 0);
+      }
+      return acc + (book.currentPage || 0);
+    }, 0);
+
+    return { booksBeingRead, booksFinished, totalPagesRead };
+  }, [books]);
 
 
   const resetFormFields = () => {
@@ -157,7 +172,7 @@ export default function App() {
   };
 
   const handleDeleteBook = (e: MouseEvent, bookId: string) => {
-    e.stopPropagation(); // Impede que o clique no botão abra o modal
+    e.stopPropagation();
     const isConfirmed = window.confirm('Tem certeza de que deseja excluir este livro?');
     if (isConfirmed) {
       setBooks(books.filter(book => book.id !== bookId));
@@ -165,26 +180,51 @@ export default function App() {
   };
 
   const handleOpenEditModal = (e: MouseEvent, book: Book) => {
-    e.stopPropagation(); // Impede que o clique no botão abra o modal
+    e.stopPropagation();
     handleOpenEditForm(book);
   };
 
   return (
     <div className="bg-slate-900 text-white min-h-screen font-sans p-4 sm:p-8">
-      <header className="max-w-5xl mx-auto mb-8">
-        <h1 className="text-4xl font-bold text-cyan-400">bookoru</h1>
-        <p className="text-slate-400">Sua biblioteca pessoal.</p>
+      <header className="max-w-5xl mx-auto mb-8 flex justify-center">
+        <img 
+          src="/logo_bookoru.png" 
+          alt="Logo Bookoru" 
+          className="h-48"
+        />
       </header>
       
       <main className="max-w-5xl mx-auto">
-        <div className="bg-slate-800 p-4 rounded-lg mb-8 flex justify-between items-center">
-          <div>
-            <h2 className="text-xl font-bold mb-2">Dashboard</h2>
-            <p className="text-slate-300">Total de livros: {books.length}</p>
+        {/* --- DASHBOARD ATUALIZADO --- */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">Dashboard</h2>
+            <button onClick={handleOpenAddForm} className="bg-cyan-500 hover:bg-cyan-600 text-slate-900 font-bold py-2 px-4 rounded-lg transition-colors">
+              Adicionar Livro
+            </button>
           </div>
-          <button onClick={handleOpenAddForm} className="bg-cyan-500 hover:bg-cyan-600 text-slate-900 font-bold py-2 px-4 rounded-lg transition-colors">
-            Adicionar Livro
-          </button>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {/* Card Total de Livros */}
+            <div className="bg-slate-800 p-4 rounded-lg">
+              <h3 className="text-slate-400 text-sm">Total de Livros</h3>
+              <p className="text-3xl font-bold">{books.length}</p>
+            </div>
+            {/* Card Lendo Agora */}
+            <div className="bg-slate-800 p-4 rounded-lg">
+              <h3 className="text-slate-400 text-sm">Lendo Agora</h3>
+              <p className="text-3xl font-bold">{stats.booksBeingRead}</p>
+            </div>
+            {/* Card Livros Finalizados */}
+            <div className="bg-slate-800 p-4 rounded-lg">
+              <h3 className="text-slate-400 text-sm">Livros Finalizados</h3>
+              <p className="text-3xl font-bold">{stats.booksFinished}</p>
+            </div>
+            {/* Card Páginas Lidas */}
+            <div className="bg-slate-800 p-4 rounded-lg">
+              <h3 className="text-slate-400 text-sm">Páginas Lidas</h3>
+              <p className="text-3xl font-bold">{stats.totalPagesRead}</p>
+            </div>
+          </div>
         </div>
 
         {isFormVisible && (
@@ -198,7 +238,7 @@ export default function App() {
               </div>
               <div className="mb-4">
                 <label htmlFor="author" className="block text-slate-400 mb-1">Autor (Obrigatório)</label>
-                <input type="text" id="author" value={author} onChange={(e) => setAuthor(e.target.value)} className="w-full bg-slate-700 border border-slate-600 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-cyan-500" />
+                <input type="text" id="author" value={author} onChange={(e) => setAuthor(e.target.value)} className="w-full bg-slate-700 border border-slate-600 rounded-lg p-2 focus:outline-ne focus:ring-2 focus:ring-cyan-500" />
               </div>
               <div className="mb-4">
                 <label htmlFor="cover" className="block text-slate-400 mb-1">URL da Capa (Opcional)</label>
@@ -248,12 +288,11 @@ export default function App() {
           </div>
         )}
 
-        {/* Listagem de Livros em Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
           {books.map((book) => (
             <div 
               key={book.id}
-              onClick={() => setSelectedBook(book)} // Adiciona o clique para abrir o modal
+              onClick={() => setSelectedBook(book)}
               className="group bg-slate-800 rounded-lg overflow-hidden shadow-lg flex flex-col hover:scale-105 transition-transform duration-300 cursor-pointer"
             >
               <div className="relative aspect-[2/3] w-full bg-slate-700 flex items-center justify-center text-center">
@@ -288,15 +327,14 @@ export default function App() {
         </div>
       </main>
 
-      {/* --- CÓDIGO DO NOVO MODAL DE DETALHES --- */}
       {selectedBook && (
         <div 
           className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center p-4 z-50"
-          onClick={() => setSelectedBook(null)} // Fecha ao clicar no fundo
+          onClick={() => setSelectedBook(null)}
         >
           <div 
             className="bg-slate-800 rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6"
-            onClick={(e) => e.stopPropagation()} // Impede que o clique dentro do modal o feche
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-start mb-4">
               <h2 className="text-2xl font-bold text-cyan-400">{selectedBook.title}</h2>
