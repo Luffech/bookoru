@@ -1,53 +1,32 @@
-/* src/index.css */
-
+/* src/app/globals.css */
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
-
-@theme {
-  --font-family-sans: "Inter", "sans-serif";
-  --radius-md: 0.5rem;
+/* Define your CSS variables first */
+:root {
+  --background: oklch(1 0 0); /* Example: white in OKLCH format */
+  --foreground: oklch(0.145 0 0); /* Example: dark gray */
+  /* Define other color variables here */
 }
 
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.dark {
+  --background: oklch(0.145 0 0); /* Dark background */
+  --foreground: oklch(0.985 0 0); /* Light text */
+  /* Dark mode overrides for other variables */
 }
 
-@layer utilities {
-  .animate-fade-in {
-    animation: fade-in 0.4s ease-out forwards;
-  }
-  
-  .line-clamp-2 {
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-  }
+/* Map CSS variables to Tailwind utilities using @theme */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  /* Map other variables like --color-primary, --color-border etc. */
 }
 
-/* base opcional — estilo do body e fonte */
+/* Apply styles using @layer */
 @layer base {
-  html {
-    font-family: var(--font-family-sans);
-    scroll-behavior: smooth;
+  * {
+    @apply border-border; /* If you have a --border-color variable */
   }
-
   body {
-    @apply bg-zinc-50 text-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 transition-colors duration-200;
-  }
-
-  input,
-  textarea,
-  select,
-  button {
-    @apply outline-none;
+    @apply bg-background text-foreground;
   }
 }

@@ -1,18 +1,14 @@
 // src/components/ThemeToggle.tsx
 'use client';
-
 import { useState, useEffect } from 'react';
 
 export function ThemeToggle() {
-  const [dark, setDark] = useState<boolean>(false);
+  const [dark, setDark] = useState<boolean>(true);
   const [themeLoaded, setThemeLoaded] = useState(false);
 
   useEffect(() => {
-    // Roda apenas no cliente, onde 'localStorage' e 'window' existem
-    const savedTheme = localStorage.getItem("theme");
-    const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const initialTheme = savedTheme === "dark" || (!savedTheme && systemPrefersDark);
-    setDark(initialTheme);
+    const isDark = localStorage.getItem("theme") !== 'light';
+    setDark(isDark);
     setThemeLoaded(true);
   }, []);
 
@@ -28,16 +24,14 @@ export function ThemeToggle() {
     }
   }, [dark, themeLoaded]);
 
-  if (!themeLoaded) {
-    return null; // Não mostra nada até o tema ser carregado para evitar piscar
-  }
+  if (!themeLoaded) return <div className="w-16 h-7" />; // Placeholder para evitar layout shift
 
   return (
     <button
       onClick={() => setDark((d) => !d)}
-      className="text-xs px-3 py-1 rounded-full border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-200"
+      className="text-xs px-3 py-1.5 rounded-full border border-border/20 hover:bg-surface"
     >
-      {dark ? "🌙 Escuro" : "☀️ Claro"}
+      {dark ? "🌙" : "☀️"}
     </button>
   );
 }
