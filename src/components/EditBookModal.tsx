@@ -1,105 +1,136 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { AppBook } from '../lib/repo';
 import { updateBook } from '../app/actions';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 const STATUS_OPTIONS: AppBook['status'][] = ["QUERO_LER", "LENDO", "LIDO", "PAUSADO", "ABANDONADO"];
 
 interface EditBookModalProps {
-  book: AppBook;
+  book: AppBook | null;
   onClose: () => void;
 }
 
 export function EditBookModal({ book, onClose }: EditBookModalProps) {
-  const [rating, setRating] = useState(book.rating || 0);
+  const [rating, setRating] = useState(0);
+  const [status, setStatus] = useState<AppBook['status'] | undefined>(undefined);
+
+  useEffect(() => {
+    if (book) {
+      setRating(book.rating || 0);
+      setStatus(book.status || 'QUERO_LER');
+    }
+  }, [book]);
+  
+  if (!book) return null;
 
   async function handleUpdateAction(formData: FormData) {
     formData.append('rating', String(rating));
-    await updateBook(formData);
-    onClose();
+    if(status) formData.append('status', status);
+
+    const promise = updateBook(formData).then(result => {
+      if (result.success) {
+        onClose();
+        return result;
+      } else {
+        throw new Error(result.message);
+      }
+    });
+
+    toast.promise(promise, {
+      loading: 'Atualizando livro...',
+      success: 'Livro atualizado com sucesso!',
+      error: (err) => err.message || 'Erro ao atualizar o livro.',
+    });
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4 animate-fade-in backdrop-blur-sm">
-      <div className="bg-[rgb(var(--background-rgb))] border border-[var(--brand-blue-medium)] rounded-2xl p-6 max-w-lg w-full shadow-2xl">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-serif text-[var(--brand-gold)]">Editar Livro</h2>
-          <button onClick={onClose} className="text-sm text-[rgb(var(--text-secondary-rgb))] hover:text-white">Fechar</button>
-        </div>
-        
-        <form action={handleUpdateAction} className="space-y-4">
+    <Dialog open={!!book} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle className="font-serif text-xl text-primary">Editar Livro</DialogTitle>
+        </DialogHeader>
+        <form action={handleUpdateAction} className="space-y-4 py-4">
           <input type="hidden" name="bookId" value={book.id} />
-          
+          <div className="space-y-2">
+            <Label htmlFor="title-edit">Título *</Label>
+            <Input id="title-edit" name="title" required defaultValue={book.title} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="author-edit">Autor *</Label>
+            <Input id="author-edit" name="author" required defaultValue={book.author} />
+          </div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <label className="block text-xs mb-1 text-[rgb(var(--text-secondary-rgb))]">Título *</label>
-              <input name="title" required defaultValue={book.title} />
+            <div className="space-y-2">
+              <Label htmlFor="currentPage-edit">Página Atual</Label>
+              <Input id="currentPage-edit" name="currentPage" type="number" defaultValue={book.currentPage} />
             </div>
-            <div className="col-span-2">
-              <label className="block text-xs mb-1 text-[rgb(var(--text-secondary-rgb))]">Autor *</label>
-              <input name="author" required defaultValue={book.author} />
+            <div className="space-y-2">
+              <Label htmlFor="totalPages-edit">Total de Páginas</Label>
+              <Input id="totalPages-edit" name="totalPages" type="number" defaultValue={book.totalPages} />
             </div>
-            <div>
-              <label className="block text-xs mb-1 text-[rgb(var(--text-secondary-rgb))]">Página Atual</label>
-              <input type="number" name="currentPage" defaultValue={book.currentPage} />
-            </div>
-            <div>
-              <label className="block text-xs mb-1 text-[rgb(var(--text-secondary-rgb))]">Total de Páginas</label>
-              <input type="number" name="totalPages" defaultValue={book.totalPages} />
-            </div>
-            <div className="col-span-2">
-              <label className="block text-xs mb-1 text-[rgb(var(--text-secondary-rgb))]">ISBN</label>
-              <input name="isbn" defaultValue={book.isbn} />
-            </div>
-            <div className="col-span-2">
-              <label className="block text-xs mb-1 text-[rgb(var(--text-secondary-rgb))]">Status</label>
-              <select name="status" defaultValue={book.status}>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="isbn-edit">ISBN</Label>
+            <Input id="isbn-edit" name="isbn" defaultValue={book.isbn} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="status-edit">Status</Label>
+            <Select onValueChange={(value) => setStatus(value as AppBook['status'])} defaultValue={book.status}>
+              <SelectTrigger id="status-edit">
+                <SelectValue placeholder="Selecione o status" />
+              </SelectTrigger>
+              <SelectContent>
                 {STATUS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                  <SelectItem key={s} value={s}>{s.replace('_', ' ')}</SelectItem>
                 ))}
-              </select>
-            </div>
+              </SelectContent>
+            </Select>
           </div>
-
-          <div>
-            <label className="block text-xs mb-1 text-[rgb(var(--text-secondary-rgb))]">Avaliação</label>
+          <div className="space-y-2">
+            <Label>Avaliação</Label>
             <div className="flex items-center gap-2">
-            {[1, 2, 3, 4, 5].map((n) => (
+              {[1, 2, 3, 4, 5].map((n) => (
                 <button
-                key={n}
-                type="button"
-                onClick={() => setRating(n)}
-                className={`text-2xl transition-transform duration-150 ease-in-out hover:scale-125 ${rating >= n ? 'text-[var(--brand-gold)]' : 'text-[var(--brand-blue-medium)]'}`}
+                  key={n}
+                  type="button"
+                  onClick={() => setRating(n)}
+                  className={`text-2xl transition-transform duration-150 ease-in-out hover:scale-125 ${rating >= n ? 'text-primary' : 'text-muted-foreground'}`}
                 >
-                👻
+                  👻
                 </button>
-            ))}
-            <button
-                type="button"
-                onClick={() => setRating(0)}
-                className="text-xs text-[rgb(var(--text-secondary-rgb))] hover:underline ml-2"
-            >
+              ))}
+              <Button type="button" variant="ghost" size="sm" onClick={() => setRating(0)} className="text-xs ml-2">
                 Limpar
-            </button>
+              </Button>
             </div>
           </div>
-
-          <div>
-            <label className="block text-xs mb-1 text-[rgb(var(--text-secondary-rgb))]">Notas</label>
-            <textarea name="notes" defaultValue={book.notes} rows={4} className="w-full rounded-md border border-[rgb(var(--border-rgb))]/50 bg-transparent px-3 py-2 text-sm" />
+          <div className="space-y-2">
+            <Label htmlFor="notes-edit">Notas</Label>
+            <Textarea id="notes-edit" name="notes" defaultValue={book.notes} />
           </div>
-
-          <div className="flex items-center gap-3 pt-4">
-            <button type="submit" className="px-4 py-2 text-sm rounded-lg border border-[var(--brand-gold)] bg-[var(--brand-gold)] text-[var(--brand-blue-dark)] font-semibold hover:bg-opacity-80 transition-colors">
-              Salvar Alterações
-            </button>
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-[rgb(var(--border-rgb))] hover:bg-[rgb(var(--surface-rgb))]">
-              Cancelar
-            </button>
-          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="secondary">Cancelar</Button>
+            </DialogClose>
+            <Button type="submit">Salvar Alterações</Button>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

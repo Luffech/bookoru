@@ -1,5 +1,21 @@
+'use client';
+
 import type { AppBook } from "../lib/repo";
 import { deleteBook } from '../app/actions';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 interface BookCardProps {
   book: AppBook;
@@ -17,9 +33,18 @@ const statusStyles: { [key: string]: string } = {
 export function BookCard({ book, onEdit }: BookCardProps) {
   const progress = book.totalPages && book.currentPage ? Math.round((book.currentPage / book.totalPages) * 100) : 0;
 
+  async function handleDelete() {
+    const promise = deleteBook(book.id);
+    toast.promise(promise, {
+      loading: 'Excluindo livro...',
+      success: 'Livro excluído com sucesso!',
+      error: 'Erro ao excluir o livro.',
+    });
+  }
+
   return (
-    <article className="bg-[rgb(var(--surface-rgb))] border border-[var(--brand-blue-medium)]/50 rounded-lg overflow-hidden shadow-lg flex flex-col hover:border-[var(--brand-gold)]/70 transition-colors duration-300">
-      <div className="relative aspect-[2/3] bg-[var(--brand-blue-dark)] overflow-hidden">
+    <Card className="overflow-hidden flex flex-col">
+      <div className="relative aspect-[2/3] bg-muted overflow-hidden">
         <img src={book.cover || "https://via.placeholder.com/400x600.png?text=Sem+Capa"} alt={book.title} className="w-full h-full object-cover" />
         {book.status && (
           <span className={`absolute top-2 right-2 text-xs font-semibold px-2 py-1 rounded-full border ${statusStyles[book.status] || statusStyles.QUERO_LER}`}>
@@ -27,45 +52,52 @@ export function BookCard({ book, onEdit }: BookCardProps) {
           </span>
         )}
       </div>
-
-      <div className="p-4 flex flex-col flex-grow bg-[rgb(var(--surface-rgb))]">
-        <h3 className="font-serif text-lg font-semibold line-clamp-2 text-[var(--brand-gold)]">{book.title}</h3>
-        <p className="text-sm text-[rgb(var(--text-secondary-rgb))] mt-1">{book.author}</p>
-        
+      <CardHeader>
+        <CardTitle className="font-serif text-lg text-primary">{book.title}</CardTitle>
+        <p className="text-sm text-muted-foreground">{book.author}</p>
+      </CardHeader>
+      <CardContent className="flex-grow">
         {book.status === 'LENDO' && progress > 0 && (
-          <div className="mt-3">
-            <div className="w-full bg-[var(--brand-blue-medium)]/20 rounded-full h-2">
-              <div className="bg-[var(--brand-gold)] h-2 rounded-full" style={{ width: `${progress}%` }}></div>
+          <div>
+            <div className="w-full bg-secondary/20 rounded-full h-2">
+              <div className="bg-primary h-2 rounded-full" style={{ width: `${progress}%` }}></div>
             </div>
-            <p className="text-xs text-right text-[rgb(var(--text-secondary-rgb))] mt-1">{progress}%</p>
+            <p className="text-xs text-right text-muted-foreground mt-1">{progress}%</p>
           </div>
         )}
-
-        <div className="flex-grow content-end">
+        <div className="mt-3">
           {book.rating ? (
-            <div className="flex items-center gap-1 mt-3">
-              <span className="text-xl text-[var(--brand-gold)]">
+            <div className="flex items-center gap-1">
+              <span className="text-2xl text-primary">
                 {'👻'.repeat(book.rating)}
               </span>
-              <span className="text-xl text-[rgb(var(--border-rgb))] opacity-30">
+              <span className="text-2xl text-border opacity-30">
                 {'👻'.repeat(5 - book.rating)}
               </span>
             </div>
           ) : null}
         </div>
-
-        <div className="mt-4 border-t border-[var(--brand-blue-medium)]/20 pt-3 flex items-center justify-end gap-2">
-            <button onClick={onEdit} className="text-xs px-3 py-1.5 rounded-md border border-[var(--brand-blue-medium)]/50 hover:bg-[var(--brand-blue-medium)] hover:text-white transition-colors">
-              Editar
-            </button>
-            <form action={deleteBook}>
-              <input type="hidden" name="bookId" value={book.id} />
-              <button type="submit" className="text-xs px-3 py-1.5 rounded-md border border-[var(--brand-blue-medium)]/50 text-red-400 hover:bg-red-500/20 hover:border-red-500 transition-colors">
-                Excluir
-              </button>
-            </form>
-        </div>
-      </div>
-    </article>
+      </CardContent>
+      <CardFooter className="flex justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={onEdit}>Editar</Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" size="sm">Excluir</Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta ação não pode ser desfeita. Isso irá deletar permanentemente o livro "{book.title}" da sua estante.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete}>Confirmar</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </CardFooter>
+    </Card>
   );
 }

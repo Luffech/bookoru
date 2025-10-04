@@ -21,26 +21,24 @@ export async function createBook(formData: FormData) {
   const validated = bookSchema.safeParse(data);
 
   if (!validated.success) {
-    console.error(validated.error.flatten().fieldErrors);
-    throw new Error("Erro de validação");
+    const errorMessages = validated.error.flatten().fieldErrors;
+    const firstError = Object.values(errorMessages)[0]?.[0] || "Erro de validação";
+    return { success: false, message: firstError };
   }
   
   try {
     await repo.createBook(validated.data);
     revalidatePath('/');
+    return { success: true };
   } catch (error) {
-    console.error("Falha ao criar livro:", error);
-    throw new Error("Falha ao criar livro");
+    return { success: false, message: "Falha ao criar o livro no servidor." };
   }
 }
 
-export async function deleteBook(formData: FormData) {
-  const id = formData.get('bookId') as string;
-
+export async function deleteBook(id: string) {
   if (!id) {
     throw new Error("ID do livro não encontrado");
   }
-
   try {
     await repo.deleteBook(id);
     revalidatePath('/');
@@ -52,24 +50,24 @@ export async function deleteBook(formData: FormData) {
 
 export async function updateBook(formData: FormData) {
   const id = formData.get('bookId') as string;
-
   if (!id) {
-    throw new Error("ID do livro não encontrado para atualização");
+    return { success: false, message: "ID do livro não encontrado para atualização" };
   }
 
   const data = Object.fromEntries(formData);
   const validated = bookSchema.safeParse(data);
 
   if (!validated.success) {
-    console.error(validated.error.flatten().fieldErrors);
-    throw new Error("Erro de validação ao atualizar");
+    const errorMessages = validated.error.flatten().fieldErrors;
+    const firstError = Object.values(errorMessages)[0]?.[0] || "Erro de validação ao atualizar";
+    return { success: false, message: firstError };
   }
 
   try {
     await repo.updateBook(id, validated.data);
     revalidatePath('/');
+    return { success: true };
   } catch (error) {
-    console.error("Falha ao atualizar livro:", error);
-    throw new Error("Falha ao atualizar livro");
+    return { success: false, message: "Falha ao atualizar o livro no servidor." };
   }
 }
