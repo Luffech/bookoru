@@ -17,8 +17,9 @@ export function BookForm() {
   const [rating, setRating] = useState(0);
   const formRef = useRef<HTMLFormElement>(null);
   const [status, setStatus] = useState<AppBook['status']>('QUERO_LER');
+  const [coverUrl, setCoverUrl] = useState('');
 
-  async function handleCreateAction(formData: FormData) {
+  const handleCreateAction = async (formData: FormData) => {
     formData.append('rating', String(rating));
     formData.append('status', status);
 
@@ -27,6 +28,7 @@ export function BookForm() {
         formRef.current?.reset();
         setRating(0);
         setStatus('QUERO_LER');
+        setCoverUrl('');
         return result;
       } else {
         throw new Error(result.message);
@@ -47,14 +49,28 @@ export function BookForm() {
       </CardHeader>
       <CardContent>
         <form ref={formRef} action={handleCreateAction} className="space-y-4">
+          
+          {coverUrl && (
+            <div className="mb-4">
+              <img src={coverUrl} alt="Preview da capa" className="w-32 h-auto mx-auto rounded-md shadow-md" />
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="cover">URL da Capa</Label>
+            <Input id="cover" name="cover" placeholder="https://..." onChange={(e) => setCoverUrl(e.target.value)} />
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="title">Título *</Label>
             <Input id="title" name="title" required />
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="author">Autor *</Label>
             <Input id="author" name="author" required />
           </div>
+          
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="currentPage">Página Atual</Label>

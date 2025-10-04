@@ -1,39 +1,41 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Button } from './ui/button';
 
 export function ThemeToggle() {
-  const [dark, setDark] = useState<boolean>(true);
-  const [themeLoaded, setThemeLoaded] = useState(false);
+  const [theme, setTheme] = useState('dark');
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    const isDark = localStorage.getItem("theme") !== 'light';
-    setDark(isDark);
-    setThemeLoaded(true);
+    setIsMounted(true);
+    const storedTheme = localStorage.getItem('theme') || 'dark';
+    setTheme(storedTheme);
   }, []);
 
   useEffect(() => {
-    if (!themeLoaded) return;
-    const root = document.documentElement;
-    if (dark) {
-      root.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      root.classList.remove("dark");
-      localStorage.setItem("theme", "light");
+    if (isMounted) {
+      if (theme === 'light') {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      }
     }
-  }, [dark, themeLoaded]);
+  }, [theme, isMounted]);
 
-  if (!themeLoaded) {
-    return <div className="w-16 h-7" />;
+  const toggleTheme = () => {
+    setTheme(theme === 'light' ? 'dark' : 'light');
+  };
+
+  if (!isMounted) {
+    return <div className="w-10 h-10" />;
   }
 
   return (
-    <button
-      onClick={() => setDark((d) => !d)}
-      className="text-xs px-3 py-1.5 rounded-full border border-[rgb(var(--border-rgb)/0.2)] hover:bg-[rgb(var(--surface-rgb))]"
-    >
-      {dark ? "Escuro 🌙" : "Claro ☀️"}
-    </button>
+    <Button variant="ghost" size="icon" onClick={toggleTheme}>
+      {theme === 'light' ? '☀️' : '🌙'}
+    </Button>
   );
 }

@@ -16,6 +16,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import Link from "next/link";
 
 interface BookCardProps {
   book: AppBook;
@@ -43,41 +44,35 @@ export function BookCard({ book, onEdit }: BookCardProps) {
   }
 
   return (
-    <Card className="overflow-hidden flex flex-col">
-      <div className="relative aspect-[2/3] bg-muted overflow-hidden">
-        <img src={book.cover || "https://via.placeholder.com/400x600.png?text=Sem+Capa"} alt={book.title} className="w-full h-full object-cover" />
-        {book.status && (
-          <span className={`absolute top-2 right-2 text-xs font-semibold px-2 py-1 rounded-full border ${statusStyles[book.status] || statusStyles.QUERO_LER}`}>
-            {book.status.replace('_', ' ')}
-          </span>
-        )}
-      </div>
-      <CardHeader>
-        <CardTitle className="font-serif text-lg text-primary">{book.title}</CardTitle>
-        <p className="text-sm text-muted-foreground">{book.author}</p>
-      </CardHeader>
-      <CardContent className="flex-grow">
-        {book.status === 'LENDO' && progress > 0 && (
-          <div>
-            <div className="w-full bg-secondary/20 rounded-full h-2">
-              <div className="bg-primary h-2 rounded-full" style={{ width: `${progress}%` }}></div>
-            </div>
-            <p className="text-xs text-right text-muted-foreground mt-1">{progress}%</p>
-          </div>
-        )}
-        <div className="mt-3">
-          {book.rating ? (
-            <div className="flex items-center gap-1">
-              <span className="text-2xl text-primary">
-                {'👻'.repeat(book.rating)}
-              </span>
-              <span className="text-2xl text-border opacity-30">
-                {'👻'.repeat(5 - book.rating)}
-              </span>
-            </div>
-          ) : null}
+    <Card className="overflow-hidden flex flex-col group">
+      <Link href={`/books/${book.id}`} className="contents">
+        <div className="relative aspect-[2/3] bg-muted overflow-hidden">
+          <img src={book.cover || "https://via.placeholder.com/400x600.png?text=Sem+Capa"} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          {book.genre && (
+            <span className="absolute top-2 right-2 text-xs font-semibold px-2 py-1 rounded-full bg-secondary text-secondary-foreground">
+              {book.genre}
+            </span>
+          )}
         </div>
-      </CardContent>
+        <CardHeader>
+          <CardTitle className="font-serif text-lg text-primary">{book.title}</CardTitle>
+          <p className="text-sm text-muted-foreground">{book.author}{book.year && `, ${book.year}`}</p>
+        </CardHeader>
+        <CardContent className="flex-grow">
+          <div>
+            {book.rating ? (
+              <div className="flex items-center gap-1">
+                <span className="text-2xl text-primary">
+                  {'👻'.repeat(book.rating)}
+                </span>
+                <span className="text-2xl text-border opacity-30">
+                  {'👻'.repeat(5 - book.rating)}
+                </span>
+              </div>
+            ) : null}
+          </div>
+        </CardContent>
+      </Link>
       <CardFooter className="flex justify-end gap-2">
         <Button variant="outline" size="sm" onClick={onEdit}>Editar</Button>
         <AlertDialog>

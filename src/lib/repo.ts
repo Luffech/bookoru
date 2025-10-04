@@ -59,8 +59,20 @@ function toDbBook(payload: Partial<AppBook>) {
 }
 
 export const repo = {
-  async listBooks(): Promise<AppBook[]> {
+  async listBooks(query?: string, genreId?: string): Promise<AppBook[]> {
+    const where: any = {};
+    if (query) {
+      where.OR = [
+        { title: { contains: query, mode: 'insensitive' } },
+        { author: { contains: query, mode: 'insensitive' } },
+      ];
+    }
+    if (genreId) {
+      where.genreId = genreId;
+    }
+
     const rows = await prisma.book.findMany({
+      where,
       include: { genre: true },
       orderBy: { createdAt: 'desc' },
     });
