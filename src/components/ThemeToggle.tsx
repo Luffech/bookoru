@@ -1,5 +1,5 @@
-// src/components/ThemeToggle.tsx
 'use client';
+
 import { useState, useEffect } from 'react';
 
 export function ThemeToggle() {
@@ -24,14 +24,16 @@ export function ThemeToggle() {
     }
   }, [dark, themeLoaded]);
 
-  if (!themeLoaded) return <div className="w-16 h-7" />; // Placeholder para evitar layout shift
+  if (!themeLoaded) {
+    return <div className="w-16 h-7" />;
+  }
 
   return (
     <button
       onClick={() => setDark((d) => !d)}
-      className="text-xs px-3 py-1.5 rounded-full border border-border/20 hover:bg-surface"
+      className="text-xs px-3 py-1.5 rounded-full border border-[rgb(var(--border-rgb)/0.2)] hover:bg-[rgb(var(--surface-rgb))]"
     >
-      {dark ? "🌙" : "☀️"}
+      {dark ? "Escuro 🌙" : "Claro ☀️"}
     </button>
   );
 }

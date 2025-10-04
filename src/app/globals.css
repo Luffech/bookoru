@@ -1,32 +1,47 @@
-/* src/app/globals.css */
 @import "tailwindcss";
 
-/* Define your CSS variables first */
-:root {
-  --background: oklch(1 0 0); /* Example: white in OKLCH format */
-  --foreground: oklch(0.145 0 0); /* Example: dark gray */
-  /* Define other color variables here */
-}
-
-.dark {
-  --background: oklch(0.145 0 0); /* Dark background */
-  --foreground: oklch(0.985 0 0); /* Light text */
-  /* Dark mode overrides for other variables */
-}
-
-/* Map CSS variables to Tailwind utilities using @theme */
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  /* Map other variables like --color-primary, --color-border etc. */
-}
-
-/* Apply styles using @layer */
 @layer base {
-  * {
-    @apply border-border; /* If you have a --border-color variable */
+  :root {
+    --font-sans: var(--font-inter), sans-serif;
+    --font-serif: var(--font-playfair), serif;
+
+    --brand-blue-dark: #0A1A2F;
+    --brand-blue-medium: #1E3A5F;
+    --brand-blue-light: #E8F0FE;
+    --brand-gold: #B8860B;
+    --brand-plum: #4A154B;
+    --brand-mustard: #DAA520;
+
+    --background-rgb: 232 240 254;
+    --foreground-rgb: 10 26 47;
+    --surface-rgb: 255 255 255;
+    --border-rgb: 30 58 95;
+    --accent-rgb: 184 134 11;
+    --text-primary-rgb: 10 26 47;
+    --text-secondary-rgb: 41 77 125;
   }
+
+  .dark {
+    --background-rgb: 10 26 47;
+    --foreground-rgb: 232 240 254;
+    --surface-rgb: 18 36 61;
+    --border-rgb: 41 77 125;
+    --accent-rgb: 202 148 12;
+    --text-primary-rgb: 255 255 255;
+    --text-secondary-rgb: 187 210 241;
+  }
+
   body {
-    @apply bg-background text-foreground;
+    background-color: rgb(var(--background-rgb));
+    color: rgb(var(--foreground-rgb));
+    font-family: var(--font-sans);
+  }
+
+  input, select {
+    @apply w-full rounded-md border px-3 py-2 text-sm placeholder:opacity-50 focus:outline-none focus:ring-2;
+    background-color: rgb(var(--surface-rgb) / 0.5);
+    border-color: rgb(var(--border-rgb) / 0.5);
+    color: rgb(var(--text-primary-rgb));
+    --tw-ring-color: rgb(var(--accent-rgb) / 0.5);
   }
 }
