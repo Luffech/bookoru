@@ -1,8 +1,7 @@
-// src/app/actions.ts
 'use server';
 
 import { z } from 'zod';
-import { repo } from '../lib/repo'; // Caminho relativo
+import { repo } from '../lib/repo';
 import { revalidatePath } from 'next/cache';
 
 const bookSchema = z.object({
@@ -13,6 +12,8 @@ const bookSchema = z.object({
   currentPage: z.coerce.number().nonnegative().optional(),
   status: z.enum(["QUERO_LER", "LENDO", "LIDO", "PAUSADO", "ABANDONADO"]),
   rating: z.coerce.number().min(0).max(5).optional(),
+  isbn: z.string().optional(),
+  notes: z.string().optional(),
 });
 
 export async function createBook(formData: FormData) {

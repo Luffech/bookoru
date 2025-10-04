@@ -23,28 +23,43 @@ export function EditBookModal({ book, onClose }: EditBookModalProps) {
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4 animate-fade-in backdrop-blur-sm">
       <div className="bg-[rgb(var(--background-rgb))] border border-[var(--brand-blue-medium)] rounded-2xl p-6 max-w-lg w-full shadow-2xl">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-serif text-[var(--brand-gold)]">Editar Livro</h2>
           <button onClick={onClose} className="text-sm text-[rgb(var(--text-secondary-rgb))] hover:text-white">Fechar</button>
         </div>
         
         <form action={handleUpdateAction} className="space-y-4">
           <input type="hidden" name="bookId" value={book.id} />
-          <div>
-            <label className="block text-xs mb-1 text-[rgb(var(--text-secondary-rgb))]">Título *</label>
-            <input name="title" required defaultValue={book.title} />
-          </div>
-          <div>
-            <label className="block text-xs mb-1 text-[rgb(var(--text-secondary-rgb))]">Autor *</label>
-            <input name="author" required defaultValue={book.author} />
-          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <label className="block text-xs mb-1 text-[rgb(var(--text-secondary-rgb))]">Título *</label>
+              <input name="title" required defaultValue={book.title} />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-xs mb-1 text-[rgb(var(--text-secondary-rgb))]">Autor *</label>
+              <input name="author" required defaultValue={book.author} />
+            </div>
             <div>
-            <label className="block text-xs mb-1 text-[rgb(var(--text-secondary-rgb))]">Status</label>
-            <select name="status" defaultValue={book.status}>
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+              <label className="block text-xs mb-1 text-[rgb(var(--text-secondary-rgb))]">Página Atual</label>
+              <input type="number" name="currentPage" defaultValue={book.currentPage} />
+            </div>
+            <div>
+              <label className="block text-xs mb-1 text-[rgb(var(--text-secondary-rgb))]">Total de Páginas</label>
+              <input type="number" name="totalPages" defaultValue={book.totalPages} />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-xs mb-1 text-[rgb(var(--text-secondary-rgb))]">ISBN</label>
+              <input name="isbn" defaultValue={book.isbn} />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-xs mb-1 text-[rgb(var(--text-secondary-rgb))]">Status</label>
+              <select name="status" defaultValue={book.status}>
+                {STATUS_OPTIONS.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div>
@@ -57,7 +72,7 @@ export function EditBookModal({ book, onClose }: EditBookModalProps) {
                 onClick={() => setRating(n)}
                 className={`text-2xl transition-transform duration-150 ease-in-out hover:scale-125 ${rating >= n ? 'text-[var(--brand-gold)]' : 'text-[var(--brand-blue-medium)]'}`}
                 >
-                ★
+                👻
                 </button>
             ))}
             <button
@@ -68,6 +83,11 @@ export function EditBookModal({ book, onClose }: EditBookModalProps) {
                 Limpar
             </button>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-xs mb-1 text-[rgb(var(--text-secondary-rgb))]">Notas</label>
+            <textarea name="notes" defaultValue={book.notes} rows={4} className="w-full rounded-md border border-[rgb(var(--border-rgb))]/50 bg-transparent px-3 py-2 text-sm" />
           </div>
 
           <div className="flex items-center gap-3 pt-4">

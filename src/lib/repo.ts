@@ -1,31 +1,27 @@
-// src/lib/repo.ts
 import { PrismaClient } from '@prisma/client';
 
 export const prisma = new PrismaClient();
 
-// Tipos do app (iguais ao front)
 type Status = 'QUERO_LER' | 'LENDO' | 'LIDO' | 'PAUSADO' | 'ABANDONADO';
 export interface AppBook {
   id: string;
   title: string;
   author: string;
-  cover?: string;        // opcional no app
-  totalPages?: number;   // <— nome do front
+  cover?: string;
+  totalPages?: number;
   currentPage?: number;
-  genre?: string;        // label opcional (se usar relação, vamos por genreId)
+  genre?: string;
   rating?: number;
   status?: Status;
   notes?: string;
   year?: number;
   synopsis?: string;
   isbn?: string;
-  genreId?: string;      // se vier id, usa relação
+  genreId?: string;
 }
 
-// fallback de capa para satisfazer coluna NOT NULL do DB
 const DEFAULT_COVER = 'https://via.placeholder.com/400x600.png?text=Sem+Capa';
 
-// mapping DB -> App
 function toAppBook(db: any): AppBook {
   return {
     id: db.id,
@@ -45,7 +41,6 @@ function toAppBook(db: any): AppBook {
   };
 }
 
-// mapping App -> DB
 function toDbBook(payload: Partial<AppBook>) {
   return {
     title: payload.title?.trim(),
@@ -70,6 +65,14 @@ export const repo = {
       orderBy: { createdAt: 'desc' },
     });
     return rows.map(toAppBook);
+  },
+
+  async getBook(id: string): Promise<AppBook | null> {
+    const book = await prisma.book.findUnique({
+      where: { id },
+      include: { genre: true },
+    });
+    return book ? toAppBook(book) : null;
   },
 
   async createBook(payload: Partial<AppBook>): Promise<AppBook> {
