@@ -1,41 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useTheme } from 'next-themes';
 import { Button } from './ui/button';
+import { useEffect, useState } from 'react';
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState('dark');
-  const [isMounted, setIsMounted] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
-    setIsMounted(true);
-    const storedTheme = localStorage.getItem('theme') || 'dark';
-    setTheme(storedTheme);
+    setMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (isMounted) {
-      if (theme === 'light') {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
-      } else {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
-      }
-    }
-  }, [theme, isMounted]);
-
-  const toggleTheme = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
-  };
-
-  if (!isMounted) {
+  if (!mounted) {
     return <div className="w-10 h-10" />;
   }
 
   return (
-    <Button variant="ghost" size="icon" onClick={toggleTheme}>
-      {theme === 'light' ? '☀️' : '🌙'}
+    <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+      {theme === 'dark' ? 'Escurinho 🌙' : 'Clarinho ☀️'}
     </Button>
   );
 }

@@ -17,15 +17,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { Genre } from '@prisma/client';
 
-const STATUS_OPTIONS: AppBook['status'][] = ["QUERO_LER", "LENDO", "LIDO", "PAUSADO", "ABANDONADO"];
+const STATUS_OPTIONS: Exclude<AppBook['status'], null>[] = ["QUERO_LER", "LENDO", "LIDO", "PAUSADO", "ABANDONADO"];
 
 interface EditBookModalProps {
   book: AppBook | null;
+  genres: Genre[];
   onClose: () => void;
 }
 
-export function EditBookModal({ book, onClose }: EditBookModalProps) {
+export function EditBookModal({ book, genres, onClose }: EditBookModalProps) {
   const [rating, setRating] = useState(0);
   const [status, setStatus] = useState<AppBook['status'] | undefined>(undefined);
 
@@ -62,7 +64,7 @@ export function EditBookModal({ book, onClose }: EditBookModalProps) {
     <Dialog open={!!book} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="font-serif text-xl text-primary">Editar Livro</DialogTitle>
+          <DialogTitle className="font-serif text-xl text-douro">Editar Livro</DialogTitle>
         </DialogHeader>
         <form action={handleUpdateAction} className="space-y-4 py-4">
           <input type="hidden" name="bookId" value={book.id} />
@@ -77,20 +79,33 @@ export function EditBookModal({ book, onClose }: EditBookModalProps) {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="currentPage-edit">Página Atual</Label>
-              <Input id="currentPage-edit" name="currentPage" type="number" defaultValue={book.currentPage} />
+              <Input id="currentPage-edit" name="currentPage" type="number" defaultValue={book.currentPage ?? ''} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="totalPages-edit">Total de Páginas</Label>
-              <Input id="totalPages-edit" name="totalPages" type="number" defaultValue={book.totalPages} />
+              <Input id="totalPages-edit" name="totalPages" type="number" defaultValue={book.totalPages ?? ''} />
             </div>
           </div>
           <div className="space-y-2">
+            <Label htmlFor="genreId-edit">Gênero</Label>
+            <Select name="genreId" defaultValue={book.genreId ?? undefined}>
+              <SelectTrigger id="genreId-edit">
+                <SelectValue placeholder="Selecione um gênero" />
+              </SelectTrigger>
+              <SelectContent>
+                {genres.map((genre) => (
+                  <SelectItem key={genre.id} value={genre.id}>{genre.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="isbn-edit">ISBN</Label>
-            <Input id="isbn-edit" name="isbn" defaultValue={book.isbn} />
+            <Input id="isbn-edit" name="isbn" defaultValue={book.isbn ?? ''} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="status-edit">Status</Label>
-            <Select onValueChange={(value) => setStatus(value as AppBook['status'])} defaultValue={book.status}>
+            <Select onValueChange={(value) => setStatus(value as AppBook['status'])} defaultValue={book.status ?? 'QUERO_LER'}>
               <SelectTrigger id="status-edit">
                 <SelectValue placeholder="Selecione o status" />
               </SelectTrigger>
@@ -109,9 +124,9 @@ export function EditBookModal({ book, onClose }: EditBookModalProps) {
                   key={n}
                   type="button"
                   onClick={() => setRating(n)}
-                  className={`text-2xl transition-transform duration-150 ease-in-out hover:scale-125 ${rating >= n ? 'text-primary' : 'text-muted-foreground'}`}
+                  className={`text-3xl transition-transform duration-150 ease-in-out hover:scale-125 ${rating >= n ? 'text-douro' : 'text-muted-foreground'}`}
                 >
-                  👻
+                  ★
                 </button>
               ))}
               <Button type="button" variant="ghost" size="sm" onClick={() => setRating(0)} className="text-xs ml-2">
@@ -121,13 +136,13 @@ export function EditBookModal({ book, onClose }: EditBookModalProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="notes-edit">Notas</Label>
-            <Textarea id="notes-edit" name="notes" defaultValue={book.notes} />
+            <Textarea id="notes-edit" name="notes" defaultValue={book.notes ?? ''} />
           </div>
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="secondary">Cancelar</Button>
             </DialogClose>
-            <Button type="submit">Salvar Alterações</Button>
+            <Button type="submit" className="bg-secondary hover:bg-primary hover:text-douro">Salvar Alterações</Button>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -14,6 +14,7 @@ const bookSchema = z.object({
   rating: z.coerce.number().min(0).max(5).optional(),
   isbn: z.string().optional(),
   notes: z.string().optional(),
+  genreId: z.string().optional().or(z.literal('')),
 });
 
 export async function createBook(formData: FormData) {
@@ -27,7 +28,11 @@ export async function createBook(formData: FormData) {
   }
   
   try {
-    await repo.createBook(validated.data);
+    const dataToSave = {
+      ...validated.data,
+      genreId: validated.data.genreId || null,
+    };
+    await repo.createBook(dataToSave);
     revalidatePath('/');
     return { success: true };
   } catch (error) {
@@ -43,7 +48,6 @@ export async function deleteBook(id: string) {
     await repo.deleteBook(id);
     revalidatePath('/');
   } catch (error) {
-    console.error("Falha ao excluir livro:", error);
     throw new Error("Falha ao excluir livro");
   }
 }
@@ -64,7 +68,11 @@ export async function updateBook(formData: FormData) {
   }
 
   try {
-    await repo.updateBook(id, validated.data);
+    const dataToSave = {
+      ...validated.data,
+      genreId: validated.data.genreId || null,
+    };
+    await repo.updateBook(id, dataToSave);
     revalidatePath('/');
     return { success: true };
   } catch (error) {

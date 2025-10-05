@@ -17,23 +17,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import Link from "next/link";
+import Image from "next/image";
 
 interface BookCardProps {
   book: AppBook;
   onEdit: () => void;
 }
 
-const statusStyles: { [key: string]: string } = {
-  LENDO: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
-  LIDO: 'bg-green-500/20 text-green-300 border-green-500/30',
-  PAUSADO: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
-  ABANDONADO: 'bg-red-500/20 text-red-300 border-red-500/30',
-  QUERO_LER: 'bg-gray-500/20 text-gray-300 border-gray-500/30',
-};
-
 export function BookCard({ book, onEdit }: BookCardProps) {
-  const progress = book.totalPages && book.currentPage ? Math.round((book.currentPage / book.totalPages) * 100) : 0;
-
   async function handleDelete() {
     const promise = deleteBook(book.id);
     toast.promise(promise, {
@@ -47,10 +38,16 @@ export function BookCard({ book, onEdit }: BookCardProps) {
     <Card className="overflow-hidden flex flex-col group">
       <Link href={`/books/${book.id}`} className="contents">
         <div className="relative aspect-[2/3] bg-muted overflow-hidden">
-          <img src={book.cover || "https://via.placeholder.com/400x600.png?text=Sem+Capa"} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          <Image 
+            src={book.cover} 
+            alt={book.title}
+            width={400}
+            height={600}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+          />
           {book.genre && (
-            <span className="absolute top-2 right-2 text-xs font-semibold px-2 py-1 rounded-full bg-secondary text-secondary-foreground">
-              {book.genre}
+            <span className="absolute top-2 right-2 text-xs font-semibold px-2 py-1 rounded-full bg-vinho text-white">
+              {book.genre.name}
             </span>
           )}
         </div>
@@ -61,12 +58,10 @@ export function BookCard({ book, onEdit }: BookCardProps) {
         <CardContent className="flex-grow">
           <div>
             {book.rating ? (
-              <div className="flex items-center gap-1">
-                <span className="text-2xl text-primary">
-                  {'👻'.repeat(book.rating)}
-                </span>
-                <span className="text-2xl text-border opacity-30">
-                  {'👻'.repeat(5 - book.rating)}
+              <div className="flex items-center gap-1 text-2xl text-douro">
+                {'★'.repeat(book.rating)}
+                <span className="text-border opacity-30">
+                  {'★'.repeat(5 - (book.rating || 0))}
                 </span>
               </div>
             ) : null}

@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import Image from "next/image";
+import { Label } from "@/components/ui/label";
 
 interface BookDetailsPageProps {
   params: {
@@ -41,22 +43,28 @@ export default async function BookDetailsPage({ params }: BookDetailsPageProps) 
 
         <div className="grid md:grid-cols-3 gap-8">
           <div className="md:col-span-1">
-            <img src={book.cover} alt={`Capa do livro ${book.title}`} className="w-full h-auto object-cover rounded-lg shadow-lg" />
+            <Image 
+              src={book.cover} 
+              alt={`Capa do livro ${book.title}`}
+              width={400}
+              height={600}
+              className="w-full h-auto object-cover rounded-lg shadow-lg" 
+            />
           </div>
           <div className="md:col-span-2">
-            <h1 className="font-serif text-4xl font-bold text-primary">{book.title}</h1>
+            <h1 className="font-serif text-4xl font-bold text-douro">{book.title}</h1>
             <p className="text-xl text-muted-foreground mt-2">{book.author}{book.year && `, ${book.year}`}</p>
             
             <div className="flex items-center gap-4 mt-4">
-                {book.genre && <span className="text-sm font-semibold px-3 py-1 rounded-full bg-secondary text-secondary-foreground">{book.genre}</span>}
+                {book.genre && <span className="text-sm font-semibold px-3 py-1 rounded-full bg-vinho text-white">{book.genre.name}</span>}
                 {book.status && <span className={`text-sm font-semibold px-3 py-1 rounded-full border ${statusStyles[book.status]}`}>{book.status.replace('_', ' ')}</span>}
             </div>
 
             {book.rating ? (
-              <div className="flex items-center gap-1 mt-4 text-3xl text-primary">
-                {'👻'.repeat(book.rating)}
+              <div className="flex items-center gap-1 mt-4 text-3xl text-douro">
+                {'★'.repeat(book.rating)}
                 <span className="text-border opacity-30">
-                  {'👻'.repeat(5 - book.rating)}
+                  {'★'.repeat(5 - book.rating)}
                 </span>
               </div>
             ) : null}
