@@ -151,18 +151,24 @@ export function BookForm({ genres }: { genres: Genre[] }) {
           <div className="space-y-2">
             <Label>Avaliação</Label>
             <div className="flex items-center gap-2">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => setRating(n)}
-                  className={`text-3xl transition-transform duration-150 ease-in-out hover:scale-125 ${
-                    rating >= n ? "text-douro" : "text-muted-foreground"
-                  }`}
-                >
-                  ★
-                </button>
-              ))}
+              {[1, 2, 3, 4, 5].map((n) => {
+                const active = rating >= n;
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    aria-label={`Avaliar ${n}`}
+                    onClick={() => setRating(n)}
+                    className={`text-3xl transition-transform duration-150 ease-in-out hover:scale-125 ${
+                      active
+                        ? "text-douro drop-shadow-glow"
+                        : "text-muted-foreground ghost-faded"
+                    }`}
+                  >
+                    👻
+                  </button>
+                );
+              })}
               <Button
                 type="button"
                 variant="ghost"

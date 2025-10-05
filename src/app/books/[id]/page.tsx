@@ -78,9 +78,9 @@ export default async function BookDetailsPage({ params }: BookDetailsPageProps) 
 
             {book.rating ? (
               <div className="flex items-center gap-1 mt-4 text-3xl text-douro">
-                {"★".repeat(book.rating)}
-                <span className="text-border opacity-30">
-                  {"★".repeat(5 - book.rating)}
+                {"👻".repeat(book.rating)}
+                <span className="ghost-faded">
+                  {"👻".repeat(5 - book.rating)}
                 </span>
               </div>
             ) : null}

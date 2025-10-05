@@ -102,3 +102,21 @@
   body { font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif; }
   h1, h2, h3 { font-family: var(--font-playfair), ui-serif, Georgia, serif; }
 }
+/* --- Glow para o fantasma ativo --- */
+@layer utilities {
+  .drop-shadow-glow {
+    /* brilho suave dourado (pode ajustar a intensidade/raio) */
+    filter: drop-shadow(0 0 6px #f4e3b2);
+  }
+}
+/* --- Fantasmas "apagados" --- */
+@layer utilities {
+  .drop-shadow-glow {
+    filter: drop-shadow(0 0 6px #f4e3b2);
+  }
+
+  .ghost-faded {
+    opacity: 0.2; /* quase transparente */
+    transition: opacity 0.2s ease-in-out;
+  }
+}

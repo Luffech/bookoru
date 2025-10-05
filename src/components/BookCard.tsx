@@ -97,7 +97,12 @@ export function BookCard({ book, genres }: { book: AppBook; genres: Genre[] }) {
               )}
 
               {book.rating !== null && book.rating !== undefined && (
-                <div className="text-douro mt-1">{`★`.repeat(book.rating)}<span className="text-border/50">{`★`.repeat(5 - book.rating)}</span></div>
+                <div className="mt-1 flex items-center gap-1 text-2xl text-douro">
+                  {"👻".repeat(book.rating)}
+                  <span className="ghost-faded">
+                    {"👻".repeat(5 - (book.rating || 0))}
+                  </span>
+                </div>
               )}
 
               {progress > 0 && (
