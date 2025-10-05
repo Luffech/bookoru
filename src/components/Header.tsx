@@ -1,15 +1,33 @@
-import Link from 'next/link';
-import { ThemeToggle } from './ThemeToggle';
+// src/components/Header.tsx
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { ThemeToggle } from "./ThemeToggle";
+import { Separator } from "@/components/ui/separator";
 
 export function Header() {
   return (
-    <header className="bg-primary sticky top-0 z-10 border-b-2 border-douro/50 shadow-md">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-3">
-          <h1 className="font-serif font-bold text-2xl text-douro">BOOkeru</h1>
+    <header className="sticky top-0 z-40 w-full bg-background/80 backdrop-blur border-b">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-2" aria-label="Ir para a página inicial">
+          
+          <Image
+            src="/logo_bookoru.png"   
+            alt="Logo Bookoru"
+            width={75}
+            height={75}
+            className="rounded-md"
+            priority
+          />
+          <span className="font-serif text-xl tracking-wide text-douro">Bookoru</span>
         </Link>
-        <ThemeToggle />
+
+        <nav aria-label="Controles de interface" className="flex items-center gap-2">
+          <ThemeToggle />
+        </nav>
       </div>
+      <Separator />
     </header>
   );
 }

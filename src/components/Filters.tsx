@@ -1,74 +1,77 @@
-'use client';
+// src/components/Filters.tsx
+"use client";
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useDebouncedCallback } from 'use-debounce';
-import { Input } from '@/components/ui/input';
+import { useDebouncedCallback } from "use-debounce";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import type { Genre } from "@prisma/client";
+import { Input } from "@/components/ui/input";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from './ui/button';
-import { Genre } from '@prisma/client';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-interface FiltersProps {
-  genres: Genre[];
-}
+const ALL = "__all"; // valor sentinela para representar "Todos"
 
-export function Filters({ genres }: FiltersProps) {
-  const searchParams = useSearchParams();
-  const { replace } = useRouter();
+export function Filters({ genres }: { genres: Genre[] }) {
+  const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  const handleSearch = useDebouncedCallback((term: string) => {
-    const params = new URLSearchParams(searchParams);
-    if (term) {
-      params.set('query', term);
-    } else {
-      params.delete('query');
-    }
-    replace(`${pathname}?${params.toString()}`);
+  const onQueryChange = useDebouncedCallback((value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) params.set("query", value);
+    else params.delete("query");
+    router.replace(`${pathname}?${params.toString()}`);
   }, 300);
 
-  const handleGenreFilter = (genreId: string | null) => {
-    const params = new URLSearchParams(searchParams);
-    if (genreId) {
-      params.set('genre', genreId);
+  const onGenreChange = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === ALL) {
+      // limpar filtro
+      params.delete("genre");
     } else {
-      params.delete('genre');
+      params.set("genre", value);
     }
-    replace(`${pathname}?${params.toString()}`);
-  }
+    router.replace(`${pathname}?${params.toString()}`);
+  };
 
-  const currentGenreName = genres.find(g => g.id === searchParams.get('genre'))?.name || 'Todos os Gêneros';
+  // se não houver ?genre=..., seleciona "__all" para exibir "Todos os gêneros"
+  const currentGenre = searchParams.get("genre") ?? ALL;
 
   return (
-    <div className="flex gap-4 mb-8">
-      <Input
-        placeholder="Buscar por título ou autor..."
-        onChange={(e) => handleSearch(e.target.value)}
-        defaultValue={searchParams.get('query')?.toString()}
-        className="flex-grow"
-      />
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="w-[200px] justify-between">
-            {currentGenreName}
-            <span className="ml-2">▼</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <DropdownMenuItem onSelect={() => handleGenreFilter(null)}>
-            Todos os Gêneros
-          </DropdownMenuItem>
-          {genres.map((genre) => (
-            <DropdownMenuItem key={genre.id} onSelect={() => handleGenreFilter(genre.id)}>
-              {genre.name}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+    <div className="grid grid-cols-1 sm:grid-cols-[1fr_220px] gap-4">
+      <div>
+        <label htmlFor="query" className="sr-only">
+          Buscar por título ou autor
+        </label>
+        <Input
+          id="query"
+          placeholder="Buscar por título ou autor..."
+          defaultValue={searchParams.get("query") ?? ""}
+          onChange={(e) => onQueryChange(e.target.value)}
+          aria-label="Buscar por título ou autor"
+        />
+      </div>
+
+      <div>
+        <Select onValueChange={onGenreChange} defaultValue={currentGenre}>
+          <SelectTrigger aria-label="Filtrar por gênero">
+            <SelectValue placeholder="Todos os gêneros" />
+          </SelectTrigger>
+          <SelectContent>
+            {/* NUNCA usar value="" aqui; Radix não permite string vazia */}
+            <SelectItem value={ALL}>Todos os gêneros</SelectItem>
+            {genres.map((g) => (
+              <SelectItem key={g.id} value={g.id}>
+                {g.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   );
 }

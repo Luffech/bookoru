@@ -1,81 +1,141 @@
-'use server';
+// src/app/actions.ts
+"use server";
 
-import { z } from 'zod';
-import { repo } from '../lib/repo';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath } from "next/cache";
+import { prisma } from "@/lib/prisma";
 
-const bookSchema = z.object({
-  title: z.string().min(1, { message: 'Título é obrigatório' }),
-  author: z.string().min(1, { message: 'Autor é obrigatório' }),
-  cover: z.string().url().optional().or(z.literal('')),
-  totalPages: z.coerce.number().positive().optional(),
-  currentPage: z.coerce.number().nonnegative().optional(),
-  status: z.enum(["QUERO_LER", "LENDO", "LIDO", "PAUSADO", "ABANDONADO"]),
-  rating: z.coerce.number().min(0).max(5).optional(),
-  isbn: z.string().optional(),
-  notes: z.string().optional(),
-  genreId: z.string().optional().or(z.literal('')),
-});
+const ALLOWED_STATUS = new Set([
+  "QUERO_LER",
+  "LENDO",
+  "LIDO",
+  "PAUSADO",
+  "ABANDONADO",
+]);
 
-export async function createBook(formData: FormData) {
-  const data = Object.fromEntries(formData);
-  const validated = bookSchema.safeParse(data);
+const PLACEHOLDER_COVER = "https://placehold.co/400x600/png?text=Book+Cover";
 
-  if (!validated.success) {
-    const errorMessages = validated.error.flatten().fieldErrors;
-    const firstError = Object.values(errorMessages)[0]?.[0] || "Erro de validação";
-    return { success: false, message: firstError };
-  }
-  
-  try {
-    const dataToSave = {
-      ...validated.data,
-      genreId: validated.data.genreId || null,
-    };
-    await repo.createBook(dataToSave);
-    revalidatePath('/');
-    return { success: true };
-  } catch (error) {
-    return { success: false, message: "Falha ao criar o livro no servidor." };
-  }
+function toInt(value: FormDataEntryValue | null, fallback = 0) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
 }
 
-export async function deleteBook(id: string) {
-  if (!id) {
-    throw new Error("ID do livro não encontrado");
-  }
+function normStr(v: FormDataEntryValue | null) {
+  return (typeof v === "string" ? v : "").trim();
+}
+
+export async function createBook(formData: FormData) {
   try {
-    await repo.deleteBook(id);
-    revalidatePath('/');
-  } catch (error) {
-    throw new Error("Falha ao excluir livro");
+    const title = normStr(formData.get("title"));
+    const author = normStr(formData.get("author"));
+    const cover = normStr(formData.get("cover")) || PLACEHOLDER_COVER;
+
+    if (!title || !author) {
+      return { success: false, message: "Título e Autor são obrigatórios." };
+    }
+
+    const currentPage = toInt(formData.get("currentPage"), 0);
+    const pages = toInt(formData.get("pages"), 0);
+    const isbn = normStr(formData.get("isbn")) || null;
+    const genreId = normStr(formData.get("genreId")) || null;
+
+    const rawStatus = normStr(formData.get("status")) || "QUERO_LER";
+    const status = ALLOWED_STATUS.has(rawStatus) ? rawStatus : "QUERO_LER";
+
+    let rating = toInt(formData.get("rating"), 0);
+    rating = Math.max(0, Math.min(5, rating));
+
+    const notes = normStr(formData.get("notes")) || null;
+
+    const safeCurrent = Math.max(0, Math.min(currentPage, Math.max(0, pages)));
+
+    const book = await prisma.book.create({
+      data: {
+        title,
+        author,
+        cover,
+        currentPage: safeCurrent,
+        pages,
+        isbn,
+        genreId,
+        status,
+        rating,
+        notes,
+      },
+    });
+
+    revalidatePath("/");
+    if (book?.id) revalidatePath(`/books/${book.id}`);
+
+    return { success: true, id: book.id };
+  } catch (err: any) {
+    return { success: false, message: err?.message || "Erro ao criar o livro." };
   }
 }
 
 export async function updateBook(formData: FormData) {
-  const id = formData.get('bookId') as string;
-  if (!id) {
-    return { success: false, message: "ID do livro não encontrado para atualização" };
-  }
-
-  const data = Object.fromEntries(formData);
-  const validated = bookSchema.safeParse(data);
-
-  if (!validated.success) {
-    const errorMessages = validated.error.flatten().fieldErrors;
-    const firstError = Object.values(errorMessages)[0]?.[0] || "Erro de validação ao atualizar";
-    return { success: false, message: firstError };
-  }
-
   try {
-    const dataToSave = {
-      ...validated.data,
-      genreId: validated.data.genreId || null,
-    };
-    await repo.updateBook(id, dataToSave);
-    revalidatePath('/');
+    const id = normStr(formData.get("bookId"));
+    if (!id) return { success: false, message: "ID do livro ausente." };
+
+    const title = normStr(formData.get("title"));
+    const author = normStr(formData.get("author"));
+
+    const currentPage = toInt(formData.get("currentPage"), 0);
+    const pages = toInt(formData.get("pages"), 0);
+    const isbn = normStr(formData.get("isbn")) || null;
+    const genreId = normStr(formData.get("genreId")) || null;
+
+    const rawStatus = normStr(formData.get("status")) || undefined;
+    const status =
+      rawStatus && ALLOWED_STATUS.has(rawStatus) ? rawStatus : undefined;
+
+    let rating = toInt(formData.get("rating"), 0);
+    rating = Math.max(0, Math.min(5, rating));
+
+    const notes = normStr(formData.get("notes")) || null;
+
+    const safeCurrent = Math.max(0, Math.min(currentPage, Math.max(0, pages)));
+
+    await prisma.book.update({
+      where: { id },
+      data: {
+        ...(title ? { title } : {}),
+        ...(author ? { author } : {}),
+        currentPage: safeCurrent,
+        pages,
+        isbn,
+        genreId,
+        ...(status ? { status } : {}),
+        rating,
+        notes,
+      },
+    });
+
+    revalidatePath("/");
+    revalidatePath(`/books/${id}`);
+
     return { success: true };
-  } catch (error) {
-    return { success: false, message: "Falha ao atualizar o livro no servidor." };
+  } catch (err: any) {
+    return {
+      success: false,
+      message: err?.message || "Erro ao atualizar o livro.",
+    };
+  }
+}
+
+export async function deleteBook(id: string) {
+  try {
+    if (!id) return { success: false, message: "ID do livro ausente." };
+
+    await prisma.book.delete({ where: { id } });
+    revalidatePath("/");
+    revalidatePath(`/books/${id}`);
+
+    return { success: true };
+  } catch (err: any) {
+    return {
+      success: false,
+      message: err?.message || "Erro ao excluir o livro.",
+    };
   }
 }

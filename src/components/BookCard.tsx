@@ -1,93 +1,127 @@
-'use client';
+// src/components/BookCard.tsx
+"use client";
 
-import type { AppBook } from "../lib/repo";
-import { deleteBook } from '../app/actions';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import type { AppBook } from "@/lib/repo";
+import type { Genre } from "@prisma/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { EditBookModal } from "@/components/EditBookModal";
+import { useState } from "react";
+import { deleteBook } from "@/app/actions";
+import { toast } from "sonner";
+import { MoreVertical } from "lucide-react";
 
-interface BookCardProps {
-  book: AppBook;
-  onEdit: () => void;
-}
+export function BookCard({ book, genres }: { book: AppBook; genres: Genre[] }) {
+  const router = useRouter();
+  const [editing, setEditing] = useState(false);
 
-export function BookCard({ book, onEdit }: BookCardProps) {
-  async function handleDelete() {
-    const promise = deleteBook(book.id);
-    toast.promise(promise, {
-      loading: 'Excluindo livro...',
-      success: 'Livro excluído com sucesso!',
-      error: 'Erro ao excluir o livro.',
+  const progress =
+    book.pages && book.currentPage
+      ? Math.round((book.currentPage / book.pages) * 100)
+      : 0;
+
+  const onDelete = () => {
+    const promise = deleteBook(book.id).then((res) => {
+      if (res.success) {
+        router.refresh();
+        return res;
+      }
+      throw new Error(res.message);
     });
-  }
+
+    toast.promise(promise, {
+      loading: "Excluindo livro...",
+      success: "Livro excluído!",
+      error: (err) => err.message || "Erro ao excluir o livro.",
+    });
+  };
 
   return (
-    <Card className="overflow-hidden flex flex-col group">
-      <Link href={`/books/${book.id}`} className="contents">
-        <div className="relative aspect-[2/3] bg-muted overflow-hidden">
-          <Image 
-            src={book.cover} 
-            alt={book.title}
-            width={400}
-            height={600}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
-          />
-          {book.genre && (
-            <span className="absolute top-2 right-2 text-xs font-semibold px-2 py-1 rounded-full bg-vinho text-white">
-              {book.genre.name}
-            </span>
-          )}
-        </div>
-        <CardHeader>
-          <CardTitle className="font-serif text-lg text-primary">{book.title}</CardTitle>
-          <p className="text-sm text-muted-foreground">{book.author}{book.year && `, ${book.year}`}</p>
-        </CardHeader>
-        <CardContent className="flex-grow">
-          <div>
-            {book.rating ? (
-              <div className="flex items-center gap-1 text-2xl text-douro">
-                {'★'.repeat(book.rating)}
-                <span className="text-border opacity-30">
-                  {'★'.repeat(5 - (book.rating || 0))}
-                </span>
-              </div>
-            ) : null}
+    <>
+      <Card className="overflow-hidden">
+        <div className="grid grid-cols-[110px_1fr] gap-4 p-4">
+          <div className="relative w-[110px] h-[160px] overflow-hidden rounded-md">
+            <Image
+              src={book.cover}
+              alt={`Capa de ${book.title}`}
+              fill
+              sizes="110px"
+              className="object-cover"
+            />
           </div>
-        </CardContent>
-      </Link>
-      <CardFooter className="flex justify-end gap-2">
-        <Button variant="outline" size="sm" onClick={onEdit}>Editar</Button>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="destructive" size="sm">Excluir</Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Esta ação não pode ser desfeita. Isso irá deletar permanentemente o livro "{book.title}" da sua estante.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete}>Confirmar</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </CardFooter>
-    </Card>
+
+          <div className="flex flex-col gap-2">
+            <CardHeader className="p-0">
+              <div className="flex items-start justify-between gap-3">
+                <CardTitle className="font-serif text-lg leading-tight">
+                  <Link href={`/books/${book.id}`} className="hover:underline">
+                    {book.title}
+                  </Link>
+                </CardTitle>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="icon" variant="ghost" aria-label="Ações">
+                      <MoreVertical />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setEditing(true)}>Editar</DropdownMenuItem>
+                    <DropdownMenuItem variant="destructive" onClick={onDelete}>
+                      Excluir
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </CardHeader>
+
+            <CardContent className="p-0">
+              <p className="text-sm text-muted-foreground">
+                {book.author || "Autor desconhecido"}
+              </p>
+
+              {book.genre?.name && (
+                <p className="text-xs mt-1">
+                  Gênero: <span className="font-medium">{book.genre.name}</span>
+                </p>
+              )}
+
+              {book.status && (
+                <p className="text-xs mt-1">
+                  Status: <span className="font-medium">{book.status.replace("_", " ")}</span>
+                </p>
+              )}
+
+              {book.rating !== null && book.rating !== undefined && (
+                <div className="text-douro mt-1">{`★`.repeat(book.rating)}<span className="text-border/50">{`★`.repeat(5 - book.rating)}</span></div>
+              )}
+
+              {progress > 0 && (
+                <div className="mt-2">
+                  <div className="w-full bg-secondary/20 rounded-full h-2">
+                    <div className="bg-primary h-2 rounded-full" style={{ width: `${progress}%` }} />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1 text-right">
+                    {progress}% ({book.currentPage}/{book.pages})
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </div>
+        </div>
+      </Card>
+
+      {editing && (
+        <EditBookModal
+          book={book}
+          genres={genres}
+          onClose={() => setEditing(false)}
+        />
+      )}
+    </>
   );
 }
